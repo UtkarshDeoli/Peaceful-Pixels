@@ -1,9 +1,11 @@
 #include <ESP8266WiFi.h> 
 #include <PubSubClient.h>
-#define MAX_MSG_LEN (128)
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include "secreats.h"
+
+#define MAX_MSG_LEN (128)
 #define buzzer 3
 #define SCREEN_WIDTH 128 // OLED display width, in pixels
 #define SCREEN_HEIGHT 64 // OLED display height, in pixels
@@ -11,13 +13,12 @@
 #define SCREEN_ADDRESS 0x3C ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
-
-const char* ssid = "Pandhari";
-const char* password = "Deoli@wifi";
-const char *serverHostname = "broker.hivemq.com";
+int x=0;
+const char* ssid = _ssid;
+const char* password = _password;
+const char *serverHostname = _serverHostname;
+const char *topic = _topic;
 //const IPAddress serverIPAddress(192, 168, 1, 9);
-const char *topic = "test/utkarsh/india/LedState";
-
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -27,7 +28,8 @@ void setup() {
   // Configure serial port for debugging
   Serial.begin(9600);
   Wire.begin(2, 0); 
-  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);// initialize with the I2C addr 0x3D (for the 128x64)
+  display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+  // initialize with the I2C addr 0x3D (for the 128x64)
   // Initialise wifi connection - this will wait until connected
   connectWifi();
   // connect to MQTT server  
@@ -108,8 +110,13 @@ void callback(char *msgTopic, byte *msgPayload, unsigned int msgLength){
   }
   strncpy(message, (char *)msgPayload, msgLength);
   message[msgLength] = '\0';
-  display.clearDisplay();
-  display.setCursor(0,20);
+  if(x>=6)
+  {
+    x=0;
+    display.clearDisplay();
+  }
+  display.setCursor(0,10*x);
+  x++;
   display.println(message);
   display.display();
   Serial.printf("topic %s, message received: %s\n", topic, message);
@@ -127,7 +134,7 @@ void fuckMe()
   for(int i=0;i<10;i++)
   {
     digitalWrite(buzzer,HIGH);
-    delay(1000 -i*10);
+    delay(500);
     digitalWrite(buzzer,LOW);
   }
   }

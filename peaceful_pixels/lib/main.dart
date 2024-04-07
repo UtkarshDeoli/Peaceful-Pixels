@@ -4,9 +4,15 @@ import 'package:mqtt_client/mqtt_server_client.dart';
 
 final client = MqttServerClient('broker.hivemq.com', '1883');
 void main() async {
+  runApp(MyApp(client: client));
   client.logging(on: true);
   client.keepAlivePeriod = 60;
   client.onConnected = onConnected;
+  makeConnection();
+}
+
+Future<bool> makeConnection() async {
+  bool toReturn = false;
   try {
     await client.connect();
   } on NoConnectionException catch (e) {
@@ -15,12 +21,14 @@ void main() async {
   }
   if (client.connectionStatus!.state == MqttConnectionState.connected) {
     print('client connected');
+    toReturn = true;
   } else {
     print(
         'client connection failed - disconnecting, status is ${client.connectionStatus}');
+    toReturn = false;
     client.disconnect();
   }
-  runApp(MyApp(client: client));
+  return toReturn;
 }
 
 void onConnected() {
@@ -69,20 +77,33 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 35, 35, 35),
       appBar: AppBar(
-        title: Text("Peaceful Pixels"),
+        title: const Text(
+          "Peaceful Pixels",
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: Color(333),
       ),
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.fromLTRB(20, 25, 20, 50),
+            padding: const EdgeInsets.fromLTRB(20, 25, 20, 50),
             child: TextField(
               style: const TextStyle(
                   color: Colors.white, fontWeight: FontWeight.w200),
-              decoration: const InputDecoration(
-                hintText: 'Enter the Custom Message You Wanna Send',
-                hintStyle: TextStyle(color: Colors.white38),
-                icon: Icon(Icons.mail),
-              ),
+              decoration: InputDecoration(
+                  floatingLabelBehavior: FloatingLabelBehavior.auto,
+                  labelText: "Message",
+                  hintText: 'Enter the Custom Message You Wanna Send',
+                  hintStyle: const TextStyle(color: Colors.white38),
+                  suffix: IconButton(
+                      onPressed: () {
+                        sendMessage(ans);
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                                content: Text('Custom Message Sent !')));
+                      },
+                      icon: const Icon(Icons.send))),
               onChanged: (value) {
                 // Update the ans variable when the text changes
                 setState(() {
@@ -91,15 +112,25 @@ class _MyHomePageState extends State<MyHomePage> {
               },
             ),
           ),
-          SizedBox(
-            height: 15,
+          const SizedBox(
+            height: 50,
           ),
           ElevatedButton(
-            child: const Text("Press to Send"),
-            onPressed: () {
-              sendMessage(ans);
-              final snackBar = SnackBar(content: Text('Custom Message Sent !'));
-              ScaffoldMessenger.of(context).showSnackBar(snackBar);
+            child: const Text("Re-Connect"),
+            onPressed: () async {
+              Future<bool> ans = makeConnection();
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Making Connection'),
+                ),
+              );
+              if (await ans) {
+                ScaffoldMessenger.of(context)
+                    .showSnackBar(SnackBar(content: Text("Connected!")));
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Could Not Connect!")));
+              }
             },
           ),
           SizedBox(
