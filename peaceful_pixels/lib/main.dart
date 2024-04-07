@@ -71,11 +71,14 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String ans = "";
+  void giveSnackBar(SnackBar snackBar) {
+    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 35, 35, 35),
+      backgroundColor: const Color.fromARGB(255, 35, 35, 35),
       appBar: AppBar(
         title: const Text(
           "Peaceful Pixels",
@@ -125,15 +128,13 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               );
               if (await ans) {
-                ScaffoldMessenger.of(context)
-                    .showSnackBar(SnackBar(content: Text("Connected!")));
+                giveSnackBar(const SnackBar(content: Text("Connected!")));
               } else {
-                ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("Could Not Connect!")));
+                giveSnackBar(const SnackBar(content: Text("Can't Connected!")));
               }
             },
           ),
-          SizedBox(
+          const SizedBox(
             height: 50,
           ),
           SingleChildScrollView(
